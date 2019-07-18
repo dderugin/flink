@@ -239,6 +239,11 @@ public class AvroSerializer<T> extends TypeSerializer<T> {
 
 		try {
 			checkAvroInitialized();
+
+			//
+			avroData.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMillisConversion());
+			avroData.addLogicalTypeConversion(new org.apache.avro.Conversions.DecimalConversion());
+
 			return avroData.deepCopy(runtimeSchema, from);
 		}
 		finally {

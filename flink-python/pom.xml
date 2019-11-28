@@ -97,9 +97,15 @@ under the License.
 						</goals>
 						<configuration>
 							<target>
-								<delete>
+								<delete includeEmptyDirs="true">
 									<fileset dir="${project.basedir}/pyflink"
-											 includes="**/*.pyc"/>
+											 includes="**/*.pyc,**/__pycache__"/>
+									<fileset dir="${project.basedir}/pyflink">
+										<and>
+											<size value="0"/>
+											<type type="dir"/>
+										</and>
+									</fileset>
 								</delete>
 								<delete file="${project.basedir}/lib/pyflink.zip"/>
 								<delete dir="${project.basedir}/target"/>
@@ -114,9 +120,15 @@ under the License.
 						</goals>
 						<configuration>
 							<target>
-								<delete>
+								<delete includeEmptyDirs="true">
 									<fileset dir="${project.basedir}/pyflink"
-											 includes="**/*.pyc"/>
+											 includes="**/*.pyc,**/__pycache__"/>
+									<fileset dir="${project.basedir}/pyflink">
+										<and>
+											<size value="0"/>
+											<type type="dir"/>
+										</and>
+									</fileset>
 								</delete>
 								<delete file="${project.basedir}/lib/pyflink.zip"/>
 								<zip destfile="${project.basedir}/lib/pyflink.zip">
@@ -135,17 +147,18 @@ under the License.
 				<executions>
 					<execution>
 						<id>shade-flink</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
 						<configuration>
-							<shadeTestJar>false</shadeTestJar>
-							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>java-binding</shadedClassifierName>
 							<artifactSet>
 								<includes combine.children="append">
 									<include>net.razorvine:*</include>
 									<include>net.sf.py4j:*</include>
 								</includes>
 							</artifactSet>
-							<relocations>
+							<relocations combine.children="append">
 								<relocation>
 									<pattern>py4j</pattern>
 									<shadedPattern>org.apache.flink.api.python.shaded.py4j</shadedPattern>

@@ -27,6 +27,8 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.operators.StreamSource;
 import org.apache.flink.util.FlinkException;
 
+import java.util.Optional;
+
 /**
  * {@link StreamTask} for executing a {@link StreamSource}.
  *
@@ -47,6 +49,8 @@ public class SourceStreamTask<OUT, SRC extends SourceFunction<OUT>, OP extends S
 
 	private static final Runnable SOURCE_POISON_LETTER = () -> {};
 
+	private final LegacySourceFunctionThread sourceThread;
+
 	private volatile boolean externallyInducedCheckpoints;
 
 	/**
@@ -57,6 +61,7 @@ public class SourceStreamTask<OUT, SRC extends SourceFunction<OUT>, OP extends S
 
 	public SourceStreamTask(Environment env) {
 		super(env);
+		this.sourceThread = new LegacySourceFunctionThread();
 	}
 
 	@Override
@@ -106,10 +111,10 @@ public class SourceStreamTask<OUT, SRC extends SourceFunction<OUT>, OP extends S
 	}
 
 	@Override
-	protected void performDefaultAction(ActionContext context) throws Exception {
+	protected void processInput(ActionContext context) throws Exception {
 		// Against the usual contract of this method, this implementation is not step-wise but blocking instead for
 		// compatibility reasons with the current source interface (source functions run as a loop, not in steps).
-		final LegacySourceFunctionThread sourceThread = new LegacySourceFunctionThread();
+		sourceThread.setTaskDescription(getName());
 		sourceThread.start();
 
 		// We run an alternative mailbox loop that does not involve default actions and synchronizes around actions.
@@ -159,6 +164,11 @@ public class SourceStreamTask<OUT, SRC extends SourceFunction<OUT>, OP extends S
 		cancelTask();
 	}
 
+	@Override
+	public Optional<Thread> getExecutingThread() {
+		return Optional.of(sourceThread);
+	}
+
 	// ------------------------------------------------------------------------
 	//  Checkpointing
 	// ------------------------------------------------------------------------
@@ -196,6 +206,10 @@ public class SourceStreamTask<OUT, SRC extends SourceFunction<OUT>, OP extends S
 			} finally {
 				mailbox.clearAndPut(SOURCE_POISON_LETTER);
 			}
+		}
+
+		public void setTaskDescription(final String taskDescription) {
+			setName("Legacy Source Thread - " + taskDescription);
 		}
 
 		void checkThrowSourceExecutionException() throws Exception {

@@ -20,8 +20,8 @@ package org.apache.flink.table.dataformat;
 
 import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.core.memory.MemorySegmentFactory;
+import org.apache.flink.table.runtime.util.SegmentsUtil;
 import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.table.util.SegmentsUtil;
 
 import java.lang.reflect.Array;
 
@@ -35,7 +35,7 @@ import static org.apache.flink.core.memory.MemoryUtils.UNSAFE;
  *
  * <p>{@code BinaryArray} are influenced by Apache Spark UnsafeArrayData.
  */
-public final class BinaryArray extends BinaryFormat implements BaseArray {
+public final class BinaryArray extends BinarySection implements BaseArray {
 
 	/**
 	 * Offset for Arrays.
@@ -174,7 +174,7 @@ public final class BinaryArray extends BinaryFormat implements BaseArray {
 		assertIndexIsValid(pos);
 		int fieldOffset = getElementOffset(pos, 8);
 		final long offsetAndSize = SegmentsUtil.getLong(segments, fieldOffset);
-		return BinaryString.readBinaryStringFieldFromSegments(
+		return BinaryFormat.readBinaryStringFieldFromSegments(
 				segments, offset, fieldOffset, offsetAndSize);
 	}
 
@@ -205,7 +205,7 @@ public final class BinaryArray extends BinaryFormat implements BaseArray {
 		assertIndexIsValid(pos);
 		int fieldOffset = getElementOffset(pos, 8);
 		final long offsetAndSize = SegmentsUtil.getLong(segments, fieldOffset);
-		return readBinaryFieldFromSegments(
+		return BinaryFormat.readBinaryFieldFromSegments(
 				segments, offset, fieldOffset, offsetAndSize);
 	}
 
